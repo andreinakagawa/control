@@ -81,4 +81,5 @@ plot(t,xint(3,:),'g');
 plot(t,uc,'k');
 xlabel('Time (s)');
 legend({'Angular position (x1)', 'Angular velocity (x2)', 'Current (x3)', 'Voltage (u)'},-1);
+xs2jpg(gcf(), 'simulation_continuous_LTI.jpg'); // Export to a JPG file
 //------------------------------------------------------------------------------
