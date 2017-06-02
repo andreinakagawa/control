@@ -74,7 +74,7 @@ t = t0:dt:tf; //time vector
 //------------------------------------------------------------------------------
 //Control parameters
 Q = diag([10,0,3.1]); //weights the states
-R = 0.6; //weights the controls
+R = 0.2; //weights the controls
 ST = diag([600,150,0]); //desired matrix at time T
 //Calculating the time-varying gain
 //initial conditions
