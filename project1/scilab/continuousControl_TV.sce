@@ -14,35 +14,24 @@ clear;
 clc;
 //------------------------------------------------------------------------------
 //Solution to the riccati differential equation
+//and the time-varying gain
+function dsk = tvGain(t,x,A,B,Q,R)
+    S = x(1:3,:); //Retrieves the current riccati solution    
+    K = inv(R)*B'*S; //new gain
+    S = A'*S + S*A - S*B*inv(R)*B'*S + Q; //new riccati solution
+    dsk = zeros(4,3); //solution of the function
+    dsk(1:3,:) = S; //riccati
+    dsk(4,:) = K; //gain
+endfunction
+//------------------------------------------------------------------------------
+//Solution to the riccati differential equation
 function dxdt = mricc(t,x,A,B,Q,R)
     dxdt = A'*x + x*A - x*B*inv(R)*B'*x + Q;
 endfunction
 //------------------------------------------------------------------------------
-//Function that integrates the time-varying optimal control
-//with the model
-function dxdt = optControlTV(t,x,xd,A,B,Q,R)
-    //Retrieves the current state
-    xs = x(1,:)'; 
-    //Retrieves the current Riccati solution
-    pr = x(2:4,:); 
-    //Time-varying gain
-    K = inv(R)*B'*P; 
-    //Control    
-    u = -K*(xs - xd); 
-    //New states
-    xs = A*xs + B*u; 
-    //New Riccati solution
-    P = A'*pr + pr*A  - pr*B*inv(R)*B'*pr + Q;
-    //Output of the function
-    dxdt = zeros(5,3);
-    dxdt(1,:) = xs'; //states
-    dxdt(2:4,:) = P; //riccati
-    dxdt(5,1) = u; //input
-endfunction
-//------------------------------------------------------------------------------
 //Dynamic model for integration
 function dxdt=integModel(t,x,xd,Ac,Bc,K)
-  u=-Kcont*(x-xd);
+  u=-K*(x-xd);
   dxdt=Ac*x+Bc*u;
 endfunction
 //------------------------------------------------------------------------------
@@ -77,45 +66,63 @@ m=0.78//Nm
 x0 = [0;0;0]; //initial state
 dt = 0.01; //step
 t0 = 0; //initial time
-tf = 50; //final time
+tf = 20; //final time
 t = t0:dt:tf; //time vector
 //------------------------------------------------------------------------------
 //Model matrices
 [A,B] = dcMotorModel(r,pho,J,Cm,Ce,L,Re);
 //------------------------------------------------------------------------------
+//Control parameters
+Q = diag([10,0,3.1]); //weights the states
+R = 0.2; //weights the controls
+ST = diag([600,150,0]); //desired matrix at time T
+//Calculating the time-varying gain
+//initial conditions
+sk0 = zeros(4,3);
+sk0(1:3,:) = ST; //riccati
+//Integrates first to find K
+skint = ode(sk0,t0,t,list(tvGain,A,B,Q,R));
+//------------------------------------------------------------------------------
+//Second integration -- applying optimal control with time-varying gain
+//Initial states
+x0 = [0;0;0];
 //Desired setpoints or reference trajectory
 xd = [2;0;0];
-//Weight matrices
-Q=diag([10,0,3.1]);
-R=0.3;
-//Solving P -- Riccati equation
-P=riccati(A,B*inv(R)*B',Q,'c','eigen');
-//Kalman gain
-Kcont=inv(R)*B'*P;
+//counter for looping through the gains
+is=1;
+//stores all the states
+X = [];
+//stores all the inputs
+U = [];
+//Integrating the dc motor model step-by-step
+//in each step, a new gain will be used to update the control law
+for i=1:length(t)-1
+    //Retrieves the current gain
+    K = skint(4,is:is+2);
+    //Integrates the model from the current time until the next timestep
+    //the function will apply optimal control given the time-varying gain
+    xint = ode(x0,t(i),t(i+1),list(integModel,xd,A,B,K));
+    //The initial state of the next integration will be the current
+    //states
+    x0 = xint;
+    //Updates the counter for looping through the gains
+    is = is+3;
+    //Stores the input
+    U = [U -K*(x0-xd)];
+    //Stores the states
+    X = [X xint];
+end
 //------------------------------------------------------------------------------
-//Integrating the model
-//x will have the states, the riccati solution (matrix) and u
-x0 = zeros(5,3);
-x0(1,:) = [0,0,0]; //initial states
-x0(2:4,:) = diag([60,0,2]); //riccati
-x0(5,:) = 0; //input
-xint = ode(x0,t0,t,list(optControlTV,xd,A,B,Q,R));
-//------------------------------------------------------------------------------
-//Retrieves only the states from the output of the integration
-xs = xint(1,:);
-ids = 1:3:length(xs);
-//Retrieves only the inputs from the output of the integration
-uo = xint(5,:);
-uid = 1:3:length(uo);
-//------------------------------------------------------------------------------
-//Plots
+////Plots
+//corrects the time vector since the last time step was not calculated
+t = t(1:$-1); 
 figure();
-plot(t,xs(ids),'r'); //position
-plot(t,xs(ids+1),'b'); //angular velocity
-plot(t,xs(ids+2),'g'); //current
-plot(t,uo(ids),'k'); //voltage
+plot(t,X(1,:),'r'); //position
+plot(t,X(2,:),'b'); //angular velocity
+plot(t,X(3,:),'g'); //current
+plot(t,U,'k'); //voltage
 legend({'Angular position (x1)', 'Angular velocity (x2)', 'Current (x3)', 'Voltage (u)'},-1);
 xlabel('Time (s)');
 title('Simulation results');
 xs2jpg(gcf(), 'simulationResultsTV.jpg'); // Export to a JPG file
-//------------------------------------------------------------------------------
+////------------------------------------------------------------------------------
