@@ -57,12 +57,12 @@ end
 //------------------------------------------------------------------------------
 cont = 1;
 //Desired setpoints or reference trajectory
-xd = [2;0;3;0];
+xd = [2;0;5;0];
 xint = []; //stores all the states during integration
 uint = []; //stores all the inputs during integration
 costQ = [];
 costR = [];
-x = [0;0;0;0]; //temporary variable for storing states
+x = [2;0;0;0]; //temporary variable for storing states
 for k=1:length(t)-1
     //Calculating the input
     u = -Kdisc(:,cont:cont+3) * (x-xd);
