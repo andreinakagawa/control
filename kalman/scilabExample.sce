@@ -47,7 +47,7 @@ for i=1:length(t)
     pp = pp - kk*h*pp;    
     //time update (prediction)
     xp = f*xk;
-    pp = f*pp*f' + Q;
+    pp = f*pp*f';
     Xk = [Xk xk];
     Xp = [Xp xp];
 end
