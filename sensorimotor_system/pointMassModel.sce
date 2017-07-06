@@ -46,7 +46,7 @@ Kdisc = [];
 S0 = diag([120,0,120,0]); //Estimate for the Riccati matrix 
 for k=1:length(t)-1
     //Calculating the time-varying gain
-    K = inv(Bd'*S0*Bd + Rd)*(Bd'*S0*F);
+    K = inv(Bd'*S0*Bd + Rd)*(Bd'*S0*Ad);
     //New riccati solution
     S0 = Ad'*S0*Ad - Ad'*S0*Bd*((Rd + Bd'*S0*Bd)^-1)*Bd'*S0*Ad + Qd;
     //Stores the riccati solution
@@ -57,12 +57,12 @@ end
 //------------------------------------------------------------------------------
 cont = 1;
 //Desired setpoints or reference trajectory
-xd = [2;0;5;0];
+xd = [0;0;6;0];
 xint = []; //stores all the states during integration
 uint = []; //stores all the inputs during integration
 costQ = [];
 costR = [];
-x = [2;0;0;0]; //temporary variable for storing states
+x = [0;0;0;0]; //temporary variable for storing states
 for k=1:length(t)-1
     //Calculating the input
     u = -Kdisc(:,cont:cont+3) * (x-xd);
@@ -85,12 +85,15 @@ t = t(1:$-1);
 figure();
 plot(xint(1,:),xint(3,:));
 ax=gca();
-ax.data_bounds=[-5 -5; 5 5];
+ax.data_bounds=[-6 -6; 6 6];
 figure();
-plot(t,xint(2,:),'r');
-plot(t,xint(4,:),'g');
+plot(t,xint(1,:),'r');
+plot(t,xint(2,:),'g');
 plot(t,uint(1,:),'k');
-plot(t,uint(2,:),'y');
+figure();
+plot(t,xint(3,:),'r');
+plot(t,xint(4,:),'g');
+plot(t,uint(2,:),'k');
 figure();
 plot(t,costQ,'r');
 plot(t,costR,'b');

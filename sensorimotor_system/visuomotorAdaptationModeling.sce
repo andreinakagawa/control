@@ -48,7 +48,7 @@ Kdisc = [];
 S0 = diag([500,0,120,0]); //Estimate for the Riccati matrix 
 for k=1:length(t)-1
     //Calculating the time-varying gain
-    K = inv(Bd'*S0*Bd + Rd)*(Bd'*S0*F);
+    K = inv(Bd'*S0*Bd + Rd)*(Bd'*S0*Ad);
     //New riccati solution
     S0 = Ad'*S0*Ad - Ad'*S0*Bd*((Rd + Bd'*S0*Bd)^-1)*Bd'*S0*Ad + Qd;
     //Stores the riccati solution
