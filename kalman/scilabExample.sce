@@ -30,24 +30,26 @@ xk = x0;
 pp = p0;
 
 // Kalman filter
-//for i=1:length(t)-1
-//    [x1(:,i+1),p1,x,p]=kalm(y(i),x1(:,i),p1,f,g,h,Q,R);
-//end
+for i=1:length(t)-1
+    [x1(:,i+1),p1,x,p]=kalm(y(i),x1(:,i),p1,f,g,h,Q,R);
+end
 
 Xk = []
+Xp = []
 //Kalman filter according to scilab algorithm
-for i=1:length(t)-1
+for i=1:length(t)
     //measurement update (correction)
     y = signal(i);    
     E = y - h*xp; //innovation
-    pp = h*pp*h' + R;
-    kk = pp*h'*inv(pp);    
+    s= h*pp*h' + R;
+    kk = pp*h'*inv(s);    
     xk = xk + kk*E;
-    pp = pp - pp*kk*h;    
+    pp = pp - kk*h*pp;    
     //time update (prediction)
     xp = f*xk;
     pp = f*pp*f' + Q;
     Xk = [Xk xk];
+    Xp = [Xp xp];
 end
 
 //Xk = []
