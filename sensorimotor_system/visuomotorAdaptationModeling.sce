@@ -7,6 +7,8 @@
 // Author: Andrei Nakagawa, MSc
 // Contact: andrei.ufu@gmail.com
 //------------------------------------------------------------------------------
+//To do: Study iterative learning control and try to model
+//adaptation
 //------------------------------------------------------------------------------
 //States
 //Position and velocity in X

@@ -123,6 +123,6 @@ plot(t,X(3,:),'g'); //current
 plot(t,U,'k'); //voltage
 legend({'Angular position (x1)', 'Angular velocity (x2)', 'Current (x3)', 'Voltage (u)'},-1);
 xlabel('Time (s)');
-title('Simulation results');
-xs2jpg(gcf(), 'simulationResultsTV.jpg'); // Export to a JPG file
+title('Continuous-time Optimal Control');
+xs2jpg(gcf(), 'simulation_continuous_LTI_TV.jpg'); // Export to a JPG file
 ////------------------------------------------------------------------------------
