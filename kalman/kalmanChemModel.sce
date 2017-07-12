@@ -81,6 +81,7 @@ discSys = dscr(contSys,dt);
 ynoise = [];
 x0 = [0;0;0];
 xk = [];
+u1 = 10*sin(2*%pi*1*t);
 u = [1;0];
 for k=1:length(t)
     x = discSys.A*x0 + discSys.B*u;
@@ -143,18 +144,24 @@ end
 xk1 = xk1(:,1:$-1);
 //------------------------------------------------------------------------------
 figure();
+plot(t,ynoise(1,:),'r');
 plot(t,xk(1,:),'b');
-plot(t,xk1(1,:),'r');
+plot(t,xk1(1,:),'k');
 title('x1');
+legend({'y', 'x', 'xest'},-1);
 xs2jpg(gcf(), 'simulation_kalman_x1.jpg'); // Export to a JPG file
 figure();
+plot(t,ynoise(2,:),'r');
 plot(t,xk(2,:),'b');
-plot(t,xk1(2,:),'r');
+plot(t,xk1(2,:),'k');
+legend({'y', 'x', 'xest'},-1);
 title('x2');
 xs2jpg(gcf(), 'simulation_kalman_x2.jpg'); // Export to a JPG file
 figure();
+plot(t,ynoise(3,:),'r');
 plot(t,xk(3,:),'b');
-plot(t,xk1(3,:),'r');
+plot(t,xk1(3,:),'k');
+legend({'y', 'x', 'xest'},-1);
 title('x3');
 xs2jpg(gcf(), 'simulation_kalman_x3.jpg'); // Export to a JPG file
 //------------------------------------------------------------------------------
