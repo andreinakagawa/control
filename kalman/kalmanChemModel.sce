@@ -77,25 +77,85 @@ contSys = syslin('c',Ac,Bc,Cc);
 //Discrete-time system
 discSys = dscr(contSys,dt);
 //------------------------------------------------------------------------------
-q = [1 0; 0 1];
-r = [1 0 0; 0 1 0; 0 0 1000];
-p0 = [1 0 0; 0 1 0; 0 0 1];
-x0 = [0;0;0];
-x1=x0;
-p1=p0;
+//Simulating the plant dynamics
 ynoise = [];
+x0 = [0;0;0];
 xk = [];
 u = [1;0];
 for k=1:length(t)
     x = discSys.A*x0 + discSys.B*u;
     xk = [xk x];
-    yn = x + rand(1,'normal');
+    yn1 = x(1) + (rand(1,'normal')/500);
+    yn2 = x(2) + (rand(1,'normal')/500);
+    yn3 = x(3) + (rand(1,'normal')/50);
+    yn = [yn1;yn2;yn3];
     ynoise = [ynoise yn];
-    [x1(:,k+1),p1] = kalm(yn,x1(:,k),p1,discSys.A,discSys.B,discSys.C,q,r);
     x0 = x;
 end
-x1 = x1(:,1:$-1);
 //------------------------------------------------------------------------------
+//State estimation using scilab "kalm"
+q = [10 0; 0 10];
+r = [1 0 0; 0 1 0; 0 0 1];
+p0 = [1 0 0; 0 1 0; 0 0 1];
+x0 = [0;0;0];
+x1=x0;
+p1=p0;
+for k=1:length(t)
+    [x1(:,k+1),p1] = kalm(ynoise(:,k),x1(:,k),p1,discSys.A,discSys.B,discSys.C,q,r);
+end
+x1 = x1(:,1:$-1);
 figure();
 plot(t,xk(1,:),'b');
 plot(t,x1(1,:),'r');
+figure();
+plot(t,xk(2,:),'b');
+plot(t,x1(2,:),'r');
+figure();
+plot(t,xk(3,:),'b');
+plot(t,x1(3,:),'r');
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//State estimation
+//Kalman filter - using scilab algorithm
+q = [10 0; 0 10];
+r = [1 0 0; 0 1 0; 0 0 1];
+p0 = [1 0 0; 0 1 0; 0 0 1];
+x0 = [0;0;0];
+x1=x0;
+p1=p0;
+xk1 = [x0];
+//kalman
+for k=1:length(t)
+    //measurement update (correction)
+    E = ynoise(:,k) - discSys.C * x0;
+    S = discSys.C * p0 * discSys.C' + r;
+    K = p0*discSys.C' * inv(S);
+    x = x0 + K*E;
+    p = p0 - K*discSys.C*p0;
+    //time update (prediction)
+    xp = discSys.A * x;
+    pp = discSys.A * p * discSys.A' + discSys.B * q * discSys.B';
+    //stores the state estimate
+    xk1 = [xk1 xp];
+    x0 = xp;
+    p0 = pp;
+end
+xk1 = xk1(:,1:$-1);
+//------------------------------------------------------------------------------
+figure();
+plot(t,xk(1,:),'b');
+plot(t,xk1(1,:),'r');
+title('x1');
+xs2jpg(gcf(), 'simulation_kalman_x1.jpg'); // Export to a JPG file
+figure();
+plot(t,xk(2,:),'b');
+plot(t,xk1(2,:),'r');
+title('x2');
+xs2jpg(gcf(), 'simulation_kalman_x2.jpg'); // Export to a JPG file
+figure();
+plot(t,xk(3,:),'b');
+plot(t,xk1(3,:),'r');
+title('x3');
+xs2jpg(gcf(), 'simulation_kalman_x3.jpg'); // Export to a JPG file
+//------------------------------------------------------------------------------
+
