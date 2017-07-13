@@ -119,7 +119,7 @@ plot(t,x1(3,:),'r');
 //State estimation
 //Kalman filter - using scilab algorithm
 q = [10 0; 0 10];
-r = [1 0 0; 0 1 0; 0 0 1];
+r = [1 0 0; 0 1 0; 0 0 10];
 p0 = [1 0 0; 0 1 0; 0 0 1];
 x0 = [0;0;0];
 x1=x0;
@@ -134,7 +134,7 @@ for k=1:length(t)
     x = x0 + K*E;
     p = p0 - K*discSys.C*p0;
     //time update (prediction)
-    xp = discSys.A * x;
+    xp = discSys.A * x + discSys.B * u;
     pp = discSys.A * p * discSys.A' + discSys.B * q * discSys.B';
     //stores the state estimate
     xk1 = [xk1 xp];
@@ -144,21 +144,21 @@ end
 xk1 = xk1(:,1:$-1);
 //------------------------------------------------------------------------------
 figure();
-plot(t,ynoise(1,:),'r');
+//plot(t,ynoise(1,:),'r');
 plot(t,xk(1,:),'b');
 plot(t,xk1(1,:),'k');
 title('x1');
 legend({'y', 'x', 'xest'},-1);
 xs2jpg(gcf(), 'simulation_kalman_x1.jpg'); // Export to a JPG file
 figure();
-plot(t,ynoise(2,:),'r');
+//plot(t,ynoise(2,:),'r');
 plot(t,xk(2,:),'b');
 plot(t,xk1(2,:),'k');
 legend({'y', 'x', 'xest'},-1);
 title('x2');
 xs2jpg(gcf(), 'simulation_kalman_x2.jpg'); // Export to a JPG file
 figure();
-plot(t,ynoise(3,:),'r');
+//plot(t,ynoise(3,:),'r');
 plot(t,xk(3,:),'b');
 plot(t,xk1(3,:),'k');
 legend({'y', 'x', 'xest'},-1);
