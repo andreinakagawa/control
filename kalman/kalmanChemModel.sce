@@ -81,10 +81,10 @@ discSys = dscr(contSys,dt);
 ynoise = [];
 x0 = [0;0;0];
 xk = [];
-u1 = 10*sin(2*%pi*1*t);
+u1 = 10*sin(2*%pi*5*t);
 u = [1;0];
 for k=1:length(t)
-    x = discSys.A*x0 + discSys.B*u;
+    x = discSys.A*x0 + discSys.B*[u1(k);0];
     xk = [xk x];
     yn1 = x(1) + (rand(1,'normal')/500);
     yn2 = x(2) + (rand(1,'normal')/500);
@@ -105,15 +105,15 @@ for k=1:length(t)
     [x1(:,k+1),p1] = kalm(ynoise(:,k),x1(:,k),p1,discSys.A,discSys.B,discSys.C,q,r);
 end
 x1 = x1(:,1:$-1);
-figure();
-plot(t,xk(1,:),'b');
-plot(t,x1(1,:),'r');
-figure();
-plot(t,xk(2,:),'b');
-plot(t,x1(2,:),'r');
-figure();
-plot(t,xk(3,:),'b');
-plot(t,x1(3,:),'r');
+//figure();
+//plot(t,xk(1,:),'b');
+//plot(t,x1(1,:),'r');
+//figure();
+//plot(t,xk(2,:),'b');
+//plot(t,x1(2,:),'r');
+//figure();
+//plot(t,xk(3,:),'b');
+//plot(t,x1(3,:),'r');
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //State estimation
@@ -134,7 +134,7 @@ for k=1:length(t)
     x = x0 + K*E;
     p = p0 - K*discSys.C*p0;
     //time update (prediction)
-    xp = discSys.A * x + discSys.B * u;
+    xp = discSys.A * x + discSys.B * [u1(k);0];
     pp = discSys.A * p * discSys.A' + discSys.B * q * discSys.B';
     //stores the state estimate
     xk1 = [xk1 xp];
@@ -142,27 +142,27 @@ for k=1:length(t)
     p0 = pp;
 end
 xk1 = xk1(:,1:$-1);
+pk1 = p0;
 //------------------------------------------------------------------------------
 figure();
-//plot(t,ynoise(1,:),'r');
+plot(t,ynoise(1,:),'g');
 plot(t,xk(1,:),'b');
 plot(t,xk1(1,:),'k');
 title('x1');
 legend({'y', 'x', 'xest'},-1);
 xs2jpg(gcf(), 'simulation_kalman_x1.jpg'); // Export to a JPG file
 figure();
-//plot(t,ynoise(2,:),'r');
+plot(t,ynoise(2,:),'g');
 plot(t,xk(2,:),'b');
 plot(t,xk1(2,:),'k');
 legend({'y', 'x', 'xest'},-1);
 title('x2');
 xs2jpg(gcf(), 'simulation_kalman_x2.jpg'); // Export to a JPG file
 figure();
-//plot(t,ynoise(3,:),'r');
+plot(t,ynoise(3,:),'g');
 plot(t,xk(3,:),'b');
 plot(t,xk1(3,:),'k');
 legend({'y', 'x', 'xest'},-1);
 title('x3');
 xs2jpg(gcf(), 'simulation_kalman_x3.jpg'); // Export to a JPG file
 //------------------------------------------------------------------------------
-
