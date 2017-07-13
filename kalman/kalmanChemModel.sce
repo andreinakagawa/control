@@ -45,6 +45,17 @@ function  [dydt]=fun_din(t,x,Ca0,T0,rho,Cp,dH,Qk,k0,Ea_R,Vr,u)
    dydt=fun(x,Ca0,T0,rho,Cp,dH,Qk,k0,Ea_R,Vr,u)
 endfunction
 //------------------------------------------------------------------------------
+function [xplus,pplus] = kalman(F,G,H,Q,R,xk,pk,yk,uk)
+    //time update (prediction)
+    xminus = F*xk + G*uk;
+    pminus = F*pk*F' + G*Q*G';    
+    //measurement update (correction)    
+    measureError = yk - (H*xminus);
+    kalmanGain = pminus*H' * inv(H*pminus*H' + R);
+    xplus = xminus + kalmanGain * measureError;
+    pplus = pminus - kalmanGain*H*pminus;
+endfunction
+//------------------------------------------------------------------------------
 //Model parameters
  Ca0=5.1;// mol/L
  Qk=-4496;// kJ/h
@@ -81,10 +92,10 @@ discSys = dscr(contSys,dt);
 ynoise = [];
 x0 = [0;0;0];
 xk = [];
-u1 = 10*sin(2*%pi*5*t);
+u1 = 1*sin(2*%pi*5*t);
 u = [1;0];
 for k=1:length(t)
-    x = discSys.A*x0 + discSys.B*[u1(k);0];
+    x = discSys.A*x0 + discSys.B*u;
     xk = [xk x];
     yn1 = x(1) + (rand(1,'normal')/500);
     yn2 = x(2) + (rand(1,'normal')/500);
@@ -140,6 +151,47 @@ for k=1:length(t)
     xk1 = [xk1 xp];
     x0 = xp;
     p0 = pp;
+end
+xk1 = xk1(:,1:$-1);
+pk1 = p0;
+//------------------------------------------------------------------------------
+//figure();
+//plot(t,ynoise(1,:),'g');
+//plot(t,xk(1,:),'b');
+//plot(t,xk1(1,:),'k');
+//title('x1');
+//legend({'y', 'x', 'xest'},-1);
+//xs2jpg(gcf(), 'simulation_kalman_x1.jpg'); // Export to a JPG file
+//figure();
+//plot(t,ynoise(2,:),'g');
+//plot(t,xk(2,:),'b');
+//plot(t,xk1(2,:),'k');
+//legend({'y', 'x', 'xest'},-1);
+//title('x2');
+//xs2jpg(gcf(), 'simulation_kalman_x2.jpg'); // Export to a JPG file
+//figure();
+//plot(t,ynoise(3,:),'g');
+//plot(t,xk(3,:),'b');
+//plot(t,xk1(3,:),'k');
+//legend({'y', 'x', 'xest'},-1);
+//title('x3');
+//xs2jpg(gcf(), 'simulation_kalman_x3.jpg'); // Export to a JPG file
+//------------------------------------------------------------------------------
+//State estimation
+//Kalman filter - using custom-made algorithm
+q = [10 0; 0 10];
+r = [1 0 0; 0 1 0; 0 0 10];
+p0 = [1 0 0; 0 1 0; 0 0 1];
+x0 = [0;0;0];
+x1=x0;
+p1=p0;
+xk1 = [x0];
+//kalman
+for k=1:length(t)
+    [x1,p1] = kalman(discSys.A,discSys.B,discSys.C,q,r,x0,p0,ynoise(:,k),u);
+    xk1 = [xk1 x1];
+    x0 = x1;
+    p0 = p1;
 end
 xk1 = xk1(:,1:$-1);
 pk1 = p0;
